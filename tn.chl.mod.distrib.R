@@ -1,6 +1,6 @@
 ## TN model using NLA data
 
-tn.model <- function(df1, df2, runmod = F) {
+tn.model <- function(df1, df2, runmod = F, varout = NULL) {
     require(rstan)
     nchains <- 4   # number of chains
 
@@ -114,7 +114,6 @@ tn.model <- function(df1, df2, runmod = F) {
                     iptn2 = iptn2)
 
     print(str(datstan))
-    stop()
 
     modstan <- '
         data {
@@ -186,21 +185,73 @@ tn.model <- function(df1, df2, runmod = F) {
                     warmup = 300, thin = 1)
         return(fit)
     }
+    else {
 
-    ## from the biogeochm paper. coef is 9.22, slope is 1.01
-    b <- log(9.22/tnsc*(chlsc^1.06))
-    plot(log(df1$chl.sc), log(df1$tn.sc-df1$nox.sc), col = "grey")
-    abline(-1.88, 1.01)
-    abline(-1.82, 0.97, col = "red")
-    abline(b, 1.06, lty = "dashed")
-    abline(v = log(100/chlsc))
-    abline(h = log(1000/tnsc))
+        ecosel <- 50
+        credint <- 0.9
+        chltarg <- 20
+        econum <- which(levels(df1$us.l3code) == ecosel)
+
+        doc.eco <- median(df1$doc.result[df1$econum == econum], na.rm = T)
+        cat("Median DOC in ecoregion:", doc.eco, "\n")
+        
+
+        grey.t <- adjustcolor("grey39", alpha.f = 0.5)
+
+        par(mar = c(4,4,1,1), mgp = c(2.3,1,0))
+
+        x <- seq(min(log(df1$chl)), max(log(df1$chl)), length = 50)
+        x.sc <- x - log(chlsc)
+        predout1 <- matrix(NA, ncol = 3, nrow = length(x.sc))
+        predout2 <- matrix(NA, ncol = 3, nrow = length(x.sc))
+        for (i in 1:length(x)) {
+            y <- varout$mud[,1] + varout$muk*x.sc[i] + log(tnsc)
+            predout1[i,] <- quantile(y, prob = c((1-credint)/2, 0.5,
+                                                 1 - (1-credint)/2))
+            y <- log(exp(varout$mud[,1])*exp(x.sc[i])^varout$muk +
+                     exp(varout$d2[, econum])*doc.eco/docsc) + log(tnsc)
+            predout2[i,] <- quantile(y, prob = c((1-credint)/2, 0.5,
+                                                 1- (1-credint)/2))
+        }
+        
+        plot(log(df1$chl), log(df1$ntl.result-df1$no3no2.result), axes = F,
+             xlab = expression(Chl~italic(a)~(mu*g/L)),
+             ylab = expression(TN - DIN~(mu*g/L)),
+             pch = 21, col = "grey", bg = "white")
+        logtick.exp(0.001, 10, c(1,2), c(F,F))
+        incvec <- df1$econum == econum
+        points(log(df1$chl)[incvec],
+               log(df1$ntl.result - df1$no3no2.result)[incvec], pch = 16,
+               col = "blue")
+
+        ylim <- range(log(df1$ntl.result - df1$no3no2.result), na.rm = T)
+        for (i in 1:3) {
+            predout1[predout1[,i] < ylim[1],i] <- NA
+            predout1[predout1[,i] > ylim[2],i] <- NA
+        }
+
+        polygon(c(x, rev(x)), c(predout1[,1], rev(predout1[,3])),
+                col = grey.t, border = NA)
+        polygon(c(x, rev(x)), c(predout2[,1], rev(predout2[,3])),
+                col = grey.t, border = NA)
+        lines(x, predout1[,2])
+        lines(x, predout2[,2])
+
+        ylo <- ylim[1] - 0.04*diff(range(ylim))
+        xlo <- min(log(df1$chl)) - 0.04*diff(range(log(df1$chl)))
+        critval <- approx(x, predout2[,1], log(chltarg))$y
+        segments(xlo, critval, log(chltarg), critval, col = "red")
+        segments(log(chltarg), critval, log(chltarg), ylo, col = "red")
+        cat("Criterion value:", exp(critval), "\n")
+        
+
+    }
 }
 
 ## save extracted variables to varout to post-process
-fitout <- tn.model(dat.merge.cross,dat.merge.17, runmod = T)
-#tn.model(dat.merge.cross, dat.merge.17, runmod = F)
-#varout.n.limnat <- extract(fitout, pars = c("u","muk", "mud",  "d2", "d2a",
-#                                       "sigd", "u", "muu"))
+#fitout <- tn.model(dat.merge.cross,dat.merge.17, runmod = T)
+#varout.n <- extract(fitout, pars = c("muk", "mud", "sigtn", "d2", "sigd"))
+tn.model(dat.merge.cross, dat.merge.17, runmod = F, varout = varout.n)
+
 
 

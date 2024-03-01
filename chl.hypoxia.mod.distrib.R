@@ -155,6 +155,7 @@ dochlmod <- function(dat.merge, dat.merge2, modat0, fitout = NULL, runmod = T, v
 
 
     ## get mean air temperature
+    load("pdat.all.rda")
     dat.merge$Temp <-interpairtemp(dat.merge$Lat, dat.merge$Lon,
                                    pdat.all)
 
@@ -419,7 +420,13 @@ dochlmod <- function(dat.merge, dat.merge2, modat0, fitout = NULL, runmod = T, v
 
 ## runmod variable set to T to run simulation and set to F to
 ##  run post processing.
-#fitout <- dochlmod(dat.merge.cross, dat.merge.17, modat0, runmod = T)
+load("pdat.all.rda")
+modat0 <- read.csv("modat0.csv")
+load("airtemp.4.lores.rda")
+load("dat.merge.17.rda")
+load("dat.merge.cross.rda")
+
+fitout <- dochlmod(dat.merge.cross, dat.merge.17, modat0, runmod = T)
 #varout.temp <- extract(fitout, pars = c("mud", "b", "tstart"))
 
 ## post process

@@ -291,7 +291,7 @@ dochlmod <- function(dat.merge, dat.merge2, modat0, fitout = NULL, runmod = T, v
     }
     else {
 
-        outputforshiny <- FALSE
+        outputforshiny <- TRUE
         if (outputforshiny) {
             ## prepare data file for shiny that includes chlsite and tstart
             tstart <- apply(varout$tstart, 2, mean)
@@ -321,7 +321,7 @@ dochlmod <- function(dat.merge, dat.merge2, modat0, fitout = NULL, runmod = T, v
             ip <- which("chlsite" == names(varout))
             varout <- varout[-ip]
             save(varout, file = "varout.2017.rda")
-            return()
+#            return()
         }
 
         ## Computations to derive a Chl criteria.
@@ -427,8 +427,8 @@ load("dat.merge.17.rda")
 load("dat.merge.cross.rda")
 
 fitout <- dochlmod(dat.merge.cross, dat.merge.17, modat0, runmod = T)
-#varout.temp <- extract(fitout, pars = c("mud", "b", "tstart"))
+varout.temp <- extract(fitout, pars = c("mud", "b", "tstart", "chlsite"))
 
 ## post process
 dochlmod(dat.merge.cross, dat.merge.17, modat0, fitout, runmod = F,
-         varout = varout)
+         varout = varout.temp)

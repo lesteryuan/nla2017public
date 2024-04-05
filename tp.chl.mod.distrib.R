@@ -83,7 +83,7 @@ ntumodel <- function(df1, df2, varout.p = NULL, runmod = T) {
     ## save data out to disk
     tpchldat <- df1
     save(tpchldat, tpsc, chlsc, cutp.depth, file = "tpchldat.rda")
-
+    stop()
     ## split tp data into two error regimes
     incvec <- df1$ptl.result < 20
     n1 <- sum(!incvec)
@@ -308,8 +308,8 @@ ntumodel <- function(df1, df2, varout.p = NULL, runmod = T) {
 ## runmod variable set to T to run simulation and set to F to
 ##  run post processing.
 
-#fitout <- ntumodel(dat.merge.cross, dat.merge.17, runmod = T)
-varout.p <- extract(fitout, pars = c("muu", "sigu", "mub", "sigb",
-                                     "sigb", "muk", "mud", "sigd",
-                                     "b", "u1", "d1"))
-ntumodel(dat.merge.cross, dat.merge.17, varout.p = varout.p, runmod = F)
+fitout <- ntumodel(dat.merge.cross, dat.merge.17, runmod = T)
+#varout.p <- extract(fitout, pars = c("muu", "sigu", "mub", "sigb",
+#                                     "sigb", "muk", "mud", "sigd",
+#                                     "b", "u1", "d1"))
+#ntumodel(dat.merge.cross, dat.merge.17, varout.p = varout.p, runmod = F)
